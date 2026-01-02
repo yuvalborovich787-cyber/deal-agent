@@ -1,0 +1,32 @@
+rules:
+  flights:
+    max_price_usd: 300
+  hilton:
+    max_points_per_night: 50000
+
+months:
+  - "2026-02"
+  - "2026-03"
+  - "2026-05"
+  - "2026-06"
+  - "2026-07"
+  - "2026-08"
+  - "2026-09"
+  - "2026-10"
+  - "2026-11"
+  - "2026-12"
+
+targets:
+  flights:
+    - name: "EL AL Flight Deals (EN)"
+      url: "https://www.elal.com/flight-deals/en-il/"
+    - name: "EL AL Flight Deals (HE)"
+      url: "https://www.elal.com/flight-deals/he-il/"
+
+  hilton_cities:
+    - "New York, NY"
+    - "Newark, NJ"
+    - "London, United Kingdom"
+    - "Berlin, Germany"
+    - "Vienna, Austria"
+    - "Barcelona, Spain"
