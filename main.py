@@ -46,6 +46,7 @@ def fetch_text(url: str) -> str:
     return soup.get_text(" ", strip=True)
 
 def scan_elal(cfg):
+    tg_send("✅ Deal Agent test: Telegram connected")
     max_price = cfg["rules"]["flights"]["max_price_usd"]
     for t in cfg["targets"]["flights"]:
         try:
