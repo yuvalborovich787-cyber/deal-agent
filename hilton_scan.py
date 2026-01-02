@@ -173,9 +173,8 @@ def main():
                             f"סף שלך: {max_points:,}"
                         )
 
-    if hits == 0:
-        # שקט מוחלט אם אין דילים — זה מה שביקשת
-        pass
+      if hits == 0:
+        # הודעת סטטוס קצרה פעם ביום כדי לוודא שהסוכן חי וחילץ נתונים
+        tg_send("🏨 Hilton scan: no deals ≤ 50K today (agent is running)")
 
-if __name__ == "__main__":
     main()
