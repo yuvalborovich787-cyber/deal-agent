@@ -70,7 +70,6 @@ def scan_elal(cfg):
 
 def main():
     init_db()
-    tg_send("✅ Deal Agent test: Telegram connected")
     cfg = yaml.safe_load(open("config.yaml", "r", encoding="utf-8"))
     scan_elal(cfg)
 
