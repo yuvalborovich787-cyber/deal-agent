@@ -1,5 +1,7 @@
-import os, re, time, sqlite3, datetime
-import requests, yaml
+import os, re, time, sqlite3, datetime, urllib.parse
+import yaml
+import requests
+from playwright.sync_api import sync_playwright
 
 DB_PATH = "seen.db"
 
@@ -38,42 +40,8 @@ def tg_send(text: str):
     url = f"https://api.telegram.org/bot{token}/sendMessage"
     requests.post(url, json={"chat_id": chat_id, "text": text}, timeout=20)
 
-def build_hilton_search_url(query: str, arrival: str, departure: str) -> str:
-    # הסרנו sessionToken בכוונה — הוא לא יציב.
-    return (
-        "https://www.hilton.com/en/search/"
-        f"?query={query}"
-        f"&arrivalDate={arrival}"
-        f"&departureDate={departure}"
-        "&flexibleDates=false"
-        "&numRooms=1"
-        "&numAdults=2"
-        "&numChildren=0"
-        "&room1ChildAges="
-        "&room2AdultAges="
-        "&redeemPts=true"
-    )
-
-def extract_points_candidates(text: str) -> list[int]:
-    # דוגמאות נפוצות שמופיעות בטקסט של העמוד:
-    # "45,000 Points" / "From 45,000 Points"
-    pts = []
-    for m in re.finditer(r"(\d{1,3}(?:,\d{3})+)\s*Points", text, flags=re.I):
-        pts.append(int(m.group(1).replace(",", "")))
-    return pts
-
-def fetch_min_points_for_search(url: str) -> int | None:
-    min_pts = fetch_min_points_for_search(url)
-    r = requests.get(url, timeout=45, headers={"User-Agent": "Mozilla/5.0"})
-    r.raise_for_status()
-    text = r.text
-    pts = extract_points_candidates(text)
-    if not pts:
-        return None
-    return min(pts)
-
 def month_probe_dates(month_yyyy_mm: str) -> list[str]:
-    # כדי לכסות את החודש בלי להיות כבדים: 1, 8, 15, 22, 28
+    # 5 דגימות בחודש: 1/8/15/22/28
     y, m = map(int, month_yyyy_mm.split("-"))
     days = [1, 8, 15, 22, 28]
     out = []
@@ -89,45 +57,97 @@ def add_days(date_iso: str, days: int) -> str:
     dt = datetime.date(y, m, d) + datetime.timedelta(days=days)
     return dt.isoformat()
 
+def build_hilton_search_url(query: str, place_id: str, arrival: str, departure: str) -> str:
+    return (
+        "https://www.hilton.com/en/search/"
+        f"?query={urllib.parse.quote(query)}"
+        f"&placeId={urllib.parse.quote(place_id)}"
+        f"&arrivalDate={arrival}"
+        f"&departureDate={departure}"
+        "&flexibleDates=false"
+        "&numRooms=1"
+        "&numAdults=1"
+        "&numChildren=0"
+        "&room1ChildAges="
+        "&room1AdultAges="
+        "&specialRateTokens="
+        "&sortBy=DISTANCE"
+    )
+
+def extract_points(text: str) -> list[int]:
+    # "45,000 Points"
+    pts = []
+    for m in re.finditer(r"(\d{1,3}(?:,\d{3})+)\s*Points", text, flags=re.I):
+        pts.append(int(m.group(1).replace(",", "")))
+    return pts
+
+def fetch_min_points_playwright(url: str) -> int | None:
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        page = browser.new_page()
+        page.goto(url, wait_until="domcontentloaded", timeout=60000)
+
+        # מחכים לרינדור של "Points" (אם לא מופיע — יכול להיות שאין תוצאות/אין נק׳ לתאריך הזה)
+        try:
+            page.wait_for_selector("text=/Points/i", timeout=25000)
+        except:
+            pass
+
+        # קוראים טקסט לאחר הרינדור
+        body_text = page.inner_text("body")
+        browser.close()
+
+    pts = extract_points(body_text)
+    if not pts:
+        return None
+    return min(pts)
+
 def main():
     init_db()
     cfg = yaml.safe_load(open("config.yaml", "r", encoding="utf-8"))
 
     max_points = cfg["rules"]["hilton"]["max_points_per_night"]
     months = cfg["months"]
-    queries = cfg["targets"]["hilton_queries"]
+    places = cfg["targets"]["hilton_places"]
 
-    found_any = False
-    for q in queries:
+    found = 0
+
+    for key, place in places.items():
+        query = place["query"]
+        place_id = place["placeId"]
+
         for month in months:
             for arrival in month_probe_dates(month):
                 departure = add_days(arrival, 1)
-                url = build_hilton_search_url(q, arrival, departure)
+                url = build_hilton_search_url(query, place_id, arrival, departure)
 
                 try:
-                    min_pts = fetch_min_points_for_search(url)
-                except Exception:
-                    min_pts = None
+                    min_pts = fetch_min_points_playwright(url)
+                except Exception as e:
+                    print("DEBUG_ERROR", key, arrival, str(e)[:120])
+                    continue
+
+                # DEBUG: כדי לוודא שהסוכן באמת רואה נקודות
+                print("DEBUG", key, arrival, min_pts)
 
                 if min_pts is None:
                     continue
 
-                # רק אם באמת מתחת לסף שלך
                 if min_pts <= max_points:
-                    key = f"hilton:{q}:{arrival}:{min_pts}"
-                    if is_new(key):
-                        found_any = True
+                    dedupe_key = f"hilton:{key}:{arrival}:{min_pts}"
+                    if is_new(dedupe_key):
+                        found += 1
                         tg_send(
                             "🏨 Hilton Points דיל\n"
-                            f"יעד: {q}\n"
+                            f"יעד: {query}\n"
                             f"תאריך: {arrival}\n"
                             f"מינ׳ נק׳ שזוהו: {min_pts:,}\n"
+                            f"סף שלך: {max_points:,}\n"
                             f"קישור: {url}"
                         )
 
-    # שקט מוחלט אם אין דילים — כמו שביקשת
-    if not found_any:
-        pass
+    # שקט מוחלט אם אין דילים
+    return
 
 if __name__ == "__main__":
     main()
