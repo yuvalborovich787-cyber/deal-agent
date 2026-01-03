@@ -23,10 +23,13 @@ targets:
     - name: "EL AL Flight Deals (HE)"
       url: "https://www.elal.com/flight-deals/he-il/"
 
-  hilton_cities:
-    - "New York, NY"
-    - "Newark, NJ"
-    - "London, United Kingdom"
-    - "Berlin, Germany"
-    - "Vienna, Austria"
-    - "Barcelona, Spain"
+  hilton_queries:
+    - "new-york"
+    - "newark"
+    - "london"
+    - "berlin"
+    - "vienna"
+    - "barcelona"
+    - "chicago"
+    - "milan"
+    - "paris"
