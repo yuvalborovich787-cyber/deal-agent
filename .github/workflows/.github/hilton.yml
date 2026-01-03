@@ -18,11 +18,10 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install deps
+          - name: Install deps
         run: |
           python -m pip install --upgrade pip
-          pip install requests beautifulsoup4 pyyaml playwright
-          playwright install --with-deps chromium
+          pip install requests pyyaml
 
       - name: Cache seen DB
         uses: actions/cache@v4
