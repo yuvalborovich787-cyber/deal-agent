@@ -47,10 +47,10 @@ def build_hilton_search_url(query: str, arrival: str, departure: str) -> str:
         f"&departureDate={departure}"
         "&flexibleDates=false"
         "&numRooms=1"
-        "&numAdults=1"
+        "&numAdults=2"
         "&numChildren=0"
         "&room1ChildAges="
-        "&room1AdultAges="
+        "&room2AdultAges="
         "&redeemPts=true"
     )
 
@@ -63,6 +63,7 @@ def extract_points_candidates(text: str) -> list[int]:
     return pts
 
 def fetch_min_points_for_search(url: str) -> int | None:
+    min_pts = fetch_min_points_for_search(url)
     r = requests.get(url, timeout=45, headers={"User-Agent": "Mozilla/5.0"})
     r.raise_for_status()
     text = r.text
