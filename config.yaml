@@ -23,13 +23,29 @@ targets:
     - name: "EL AL Flight Deals (HE)"
       url: "https://www.elal.com/flight-deals/he-il/"
 
-  hilton_queries:
-    - "new-york"
-    - "newark"
-    - "london"
-    - "berlin"
-    - "vienna"
-    - "barcelona"
-    - "chicago"
-    - "milan"
-    - "paris"
+  # Hilton: אנחנו עובדים עם query + placeId (מה-URL שהילטון מייצר),
+  # כדי שהחיפוש יהיה יציב ולא תלוי בניחוש UI.
+  hilton_places:
+    berlin:
+      query: "Berlin, Germany"
+      placeId: "dx-location::locality::de::berlin"
+
+    london:
+      query: "London, United Kingdom"
+      placeId: "dx-location::locality::gb::london"
+
+    vienna:
+      query: "Vienna, Austria"
+      placeId: "dx-location::locality::at::vienna"
+
+    barcelona:
+      query: "Barcelona, Spain"
+      placeId: "dx-location::locality::es::barcelona"
+
+    newyork:
+      query: "New York, NY, United States"
+      placeId: "dx-location::locality::us::new-york"
+
+    newark:
+      query: "Newark, NJ, United States"
+      placeId: "dx-location::locality::us::newark"
