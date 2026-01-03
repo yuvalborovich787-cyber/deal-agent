@@ -20,7 +20,8 @@ jobs:
       - name: Install deps
         run: |
           python -m pip install --upgrade pip
-          pip install requests pyyaml beautifulsoup4
+          pip install pyyaml playwright requests
+          playwright install --with-deps chromium
 
       - name: Cache seen DB
         uses: actions/cache@v4
