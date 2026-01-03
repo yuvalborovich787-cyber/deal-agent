@@ -2,7 +2,7 @@ rules:
   flights:
     max_price_usd: 300
   hilton:
-    max_points_per_night: 50000
+    max_points_per_night: 20000
 
 months:
   - "2026-02"
@@ -23,8 +23,6 @@ targets:
     - name: "EL AL Flight Deals (HE)"
       url: "https://www.elal.com/flight-deals/he-il/"
 
-  # Hilton: אנחנו עובדים עם query + placeId (מה-URL שהילטון מייצר),
-  # כדי שהחיפוש יהיה יציב ולא תלוי בניחוש UI.
   hilton_places:
     berlin:
       query: "Berlin, Germany"
@@ -33,10 +31,6 @@ targets:
     london:
       query: "London, United Kingdom"
       placeId: "dx-location::locality::gb::london"
-
-    vienna:
-      query: "Vienna, Austria"
-      placeId: "dx-location::locality::at::vienna"
 
     barcelona:
       query: "Barcelona, Spain"
@@ -49,3 +43,19 @@ targets:
     newark:
       query: "Newark, NJ, United States"
       placeId: "dx-location::locality::us::newark"
+
+    paris:
+      query: "Paris, France"
+      placeId: "dx-location::locality::fr::paris"
+
+    vienna:
+      query: "Vienna, Austria"
+      placeId: "dx-location::locality::at::vienna"
+
+    copenhagen:
+      query: "Copenhagen, Denmark"
+      placeId: "dx-location::locality::dk::copenhagen"
+
+    stockholm:
+      query: "Stockholm, Sweden"
+      placeId: "dx-location::locality::se::stockholm"
